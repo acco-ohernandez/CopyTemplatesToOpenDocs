@@ -1,0 +1,29 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<RevitAddIns>
+  <!--<AddIn Type="Command">
+    <Text>CopyTemplatesToOpenDocs - Command 1</Text>
+    <Description>Some description for CopyTemplatesToOpenDocs</Description>
+    <Assembly>CopyTemplatesToOpenDocs.dll</Assembly>
+    <FullClassName>CopyTemplatesToOpenDocs.Command1</FullClassName>
+    <ClientId>c7b01959-6731-45c7-9fbc-2d14137ee62c</ClientId>
+    <VendorId>com.YOUR COMPANY NAME</VendorId>
+    <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
+  </AddIn>
+  <AddIn Type="Command">
+    <Text>CopyTemplatesToOpenDocs - Command 2</Text>
+    <Description>Some description for CopyTemplatesToOpenDocs</Description>
+    <Assembly>CopyTemplatesToOpenDocs.dll</Assembly>
+    <FullClassName>CopyTemplatesToOpenDocs.Command2</FullClassName>
+    <ClientId>15cdac0c-9da8-44d0-9a70-6bb26dab55f9</ClientId>
+    <VendorId>com.YOUR COMPANY NAME</VendorId>
+    <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
+  </AddIn>-->
+  <AddIn Type="Application">
+    <Name>CopyTemplatesToOpenDocs</Name>
+    <Assembly>CopyTemplatesToOpenDocs.dll</Assembly>
+    <FullClassName>CopyTemplatesToOpenDocs.App</FullClassName>
+    <ClientId>466152a7-5c51-4851-9f07-8d35e5f2545f</ClientId>
+    <VendorId>com.YOUR COMPANY NAME</VendorId>
+    <VendorDescription>YOUR COMPANY NAME, YOUR COMPANY URL</VendorDescription>
+  </AddIn>
+</RevitAddIns>
