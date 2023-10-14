@@ -12,6 +12,8 @@ using Autodesk.Revit.DB;
 using Autodesk.Revit.UI;
 using Autodesk.Revit.UI.Selection;
 
+using CopyTemplatesToOpenDocs.Forms;
+
 #endregion
 
 namespace CopyTemplatesToOpenDocs
@@ -45,53 +47,83 @@ namespace CopyTemplatesToOpenDocs
 
             // Get all the ViewTemplate IDs
             var allViewTemplates = GetAllViewTemplates(doc);
-            if (allViewTemplates.Count() == 0)
-            {
-                TaskDialog.Show("Info", "The Current document has not ViewTemplates.");
+            if (allViewTemplates == null)
                 return Result.Cancelled;
-            }
 
-            //// Get the id of the view template assigned to the active view
-            //ElementId templateId = doc.ActiveView.ViewTemplateId;
-            //if (templateId == ElementId.InvalidElementId)
-            //{
-            //    TaskDialog.Show("Error", "Active view must have a view template assigned.");
-            //    return Result.Failed;
-            //}
+            // Open schedulesImport_Form1
+            ListForm1 ViewTemplateListForm = new ListForm1()
+            {
+                Width = 500,
+                Height = 600,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                Topmost = true,
+            };
 
-            //// Add the template id to a collection
-            //ICollection<ElementId> copyIds = new Collection<ElementId>();
-            //copyIds.Add(templateId);
+            // Gui for list of templates
+            // CODE HERE<============================
+            // Get the selected templates list
+            // Pass the list schedules to the form data grid
+            ViewTemplateListForm.dataGrid.ItemsSource = allViewTemplates.Select(vt => vt.Name).ToList();
+            ViewTemplateListForm.ShowDialog();
+            //var allViewTemplateIDs = allViewTemplates.Select(vt => vt.Id).ToList();
+            int count = 0;
+            List<ElementId> viewTemplateIDsList = ViewTemplateListForm.DialogResult == true
+                                        ? ViewTemplateListForm.dataGrid.SelectedItems.Cast<string>()
+                                            .Select(curViewTemplateName =>
+                                            {
+                                                var viewTemplate = allViewTemplates.FirstOrDefault(vt => vt.Name == curViewTemplateName);
+                                                return viewTemplate.Id;
+                                            })
+                                            .Where(id => id != null)
+                                            .ToList()
+                                        : new List<ElementId>(); // Store as a list of integers, not ElementIds
+
+            //M_MyTaskDialog("Info", $"{count} Schedule(s) Imported Successfully");
+
+
+
+            // Gui for list of documents
+            // CODE HERE <============================
+            // Get the selected documents list
+
 
             // Create a default CopyPasteOptions
             CopyPasteOptions cpOpts = new CopyPasteOptions();
 
+            List<string> titlesOfDoc = new List<string>();
+
             // Create a new transaction in each of the other documents and copy the template
             foreach (Document otherDoc in openDocs)
             {
+                // Get the name of the current doc
+                titlesOfDoc.Add(otherDoc.Title);
+
                 using (Transaction t = new Transaction(otherDoc, "Copy View Template"))
                 {
                     t.Start();
 
                     // Perform the copy into the other document using ElementTransformUtils
-                    //ElementTransformUtils.CopyElements(doc, copyIds, otherDoc, Transform.Identity, cpOpts);
-                    ElementTransformUtils.CopyElements(doc, allViewTemplates, otherDoc, Transform.Identity, cpOpts);
+                    //ElementTransformUtils.CopyElements(doc, allViewTemplates, otherDoc, Transform.Identity, cpOpts);
+                    ElementTransformUtils.CopyElements(doc, viewTemplateIDsList, otherDoc, Transform.Identity, cpOpts);
 
                     t.Commit();
                 }
             }
 
+            Debug.Print($"Revit model(s) updated: {titlesOfDoc.Count()}");
+            Debug.Print($"View Templates copied: {allViewTemplates.Count()}");
+
+
+
             return Result.Succeeded;
         }
-
-        private List<ElementId> GetAllViewTemplates(Document doc)
+        private List<View> GetAllViewTemplates(Document doc)
         {
-
             // Get all View Templates in the current document
             FilteredElementCollector collector = new FilteredElementCollector(doc).OfClass(typeof(View));
 
             // Filter for View Templates (they are of type View)
-            var viewTemplates = collector.OfType<View>().Where(view => view.IsTemplate).ToList();
+            var viewTemplates = collector.OfType<View>().Where(view => view.IsTemplate).OrderBy(v => v.Name).ToList();
 
             // Check if there are any View Templates
             if (viewTemplates.Count == 0)
@@ -101,16 +133,7 @@ namespace CopyTemplatesToOpenDocs
             }
 
             // Now viewTemplates is a collection of View Templates in the current document
-            // You can loop through these templates and copy them to other documents as needed
-            List<ElementId> viewTemplateIds = new List<ElementId>();
-            foreach (var template in viewTemplates)
-            {
-                //ElementId templateId = template.Id;
-                viewTemplateIds.Add(template.Id);
-
-                // Rest of your code to copy this template to other documents
-            }
-            return viewTemplateIds;
+            return viewTemplates;
         }
 
         internal static PushButtonData GetButtonData()
@@ -130,4 +153,6 @@ namespace CopyTemplatesToOpenDocs
             return myButtonData1.Data;
         }
     }
+
+
 }

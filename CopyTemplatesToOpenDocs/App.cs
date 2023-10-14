@@ -34,10 +34,12 @@ namespace CopyTemplatesToOpenDocs
 
             //// 3. Create button data instances
             PushButtonData btnData1 = Cmd_CopyTemplates.GetButtonData();
+            PushButtonData btnDataReloadAddin = Cmd_ReloadAddIn.GetButtonData();
             //PushButtonData btnData2 = Command2.GetButtonData();
 
             //// 4. Create buttons
             PushButton myButton1 = panel.AddItem(btnData1) as PushButton;
+            PushButton btnReloadAddin = panel.AddItem(btnDataReloadAddin) as PushButton;
             //PushButton myButton2 = panel.AddItem(btnData2) as PushButton;
 
             // NOTE:
