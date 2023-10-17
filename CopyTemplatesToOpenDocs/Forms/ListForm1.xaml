@@ -14,7 +14,7 @@
 
         </Grid.RowDefinitions>
 
-        <Label Grid.Row="0" Content="Copy View Templates to other open Revit Models" HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="20" FontWeight="Bold"/>
+        <Label Grid.Row="0" x:Name="lbl_Info" Content="." HorizontalAlignment="Left" VerticalAlignment="Center" FontSize="20" FontWeight="Bold"/>
 
         <DataGrid x:Name="dataGrid" 
           Grid.Row="1"
@@ -31,7 +31,7 @@
 
                 <DataGridCheckBoxColumn Header="Select" Binding="{Binding IsSelected, Mode=TwoWay}" Width="auto" IsReadOnly="False"/>
 
-                <DataGridTextColumn Header="View Template name" Binding="{Binding TemplateName}" Width="*" IsReadOnly="True"/>
+                <DataGridTextColumn Header="Name" Binding="{Binding TemplateName}" Width="*" IsReadOnly="True"/>
             </DataGrid.Columns>
         </DataGrid>
 

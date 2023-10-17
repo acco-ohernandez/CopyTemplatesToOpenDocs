@@ -57,7 +57,7 @@ namespace CopyTemplatesToOpenDocs
             var ViewTemplatesList = new ObservableCollection<ViewTemplateData>(
                 allViewTemplates.Select(vt => new ViewTemplateData(vt.Name, false)));
 
-            // Open schedulesImport_Form1
+            // Open ViewTemplateListForm
             ListForm1 ViewTemplateListForm = new ListForm1(ViewTemplatesList)
             {
                 Width = 600,
@@ -65,85 +65,102 @@ namespace CopyTemplatesToOpenDocs
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
                 Topmost = true,
             };
-
+            ViewTemplateListForm.lbl_Info.Content = "Select the View Templates from the current Model.";
+            // Show the View Templates for the user to select them
             ViewTemplateListForm.ShowDialog();
 
-            List<ElementId> viewTemplateIDsList = new List<ElementId>();
-            // Check if the user confirmed the selection
-            if (ViewTemplateListForm.DialogResult == true)
+            // Check if the user confirmed the selection if not return Result.Cancelled
+            if (ViewTemplateListForm.DialogResult != true)
+                return Result.Cancelled;
+
+            // Get the selected documents list (User GUI/Form)
+            var selectedDocsList = GetListOfSelectedDocs(openDocs);
+
+            // Get the selected templates where IsSelected is true
+            var selectedViewTemplates = ViewTemplateListForm.selectedViewTemplates.Where(vtData => vtData.IsSelected);
+
+            // Collect the IDs of the selected templates
+            var viewTemplateIDsList = new List<ElementId>();
+            viewTemplateIDsList = selectedViewTemplates
+                .Select(vtData => allViewTemplates.FirstOrDefault(vt => vt.Name == vtData.TemplateName))
+                .Where(viewTemplate => viewTemplate != null)
+                .Select(viewTemplate => viewTemplate.Id)
+                .ToList();
+
+            if (viewTemplateIDsList.Count == 0)
             {
-
-                // Update the selectedViewTemplates collection with user selections
-                var selectedViewTemplates = new ObservableCollection<ViewTemplateData>(ViewTemplateListForm.selectedViewTemplates);
-
-                // Collect the IDs of the selected templates
-                foreach (ViewTemplateData vtData in selectedViewTemplates)
-                {
-                    Debug.Print($"TemplateName: {vtData.TemplateName}, IsSelected: {vtData.IsSelected} ======================");
-                    if (vtData.IsSelected)
-                    {
-                        var viewTemplate = allViewTemplates.FirstOrDefault(vt => vt.Name == vtData.TemplateName);
-                        if (viewTemplate != null)
-                        {
-                            viewTemplateIDsList.Add(viewTemplate.Id);
-                        }
-                    }
-                }
-
-                if (viewTemplateIDsList.Count == 0)
-                {
-                    TaskDialog.Show("Info", "No View Templates Selected \nNothing copied");
-                    return Result.Cancelled;
-                }
-
-                // Rest of your code for copying templates...
-            }
-            else
-            {
+                TaskDialog.Show("Info", "No View Templates Selected \nNothing copied");
                 return Result.Cancelled;
             }
 
-            // Gui for list of documents
-            // CODE HERE <============================
-            // Get the selected documents list
+
 
             // Create a default CopyPasteOptions
             CopyPasteOptions cpOpts = new CopyPasteOptions();
-            cpOpts.SetDuplicateTypeNamesHandler(new MyCopyHandler());
+            cpOpts.SetDuplicateTypeNamesHandler(new MyCopyHandler()); // Set the option to Skip duplicates and use the existing type
 
-            List<string> titlesOfDoc = new List<string>();
+            var titlesOfDocList = new List<string>();
 
-            // Create a new transaction in each of the other documents and copy the template
-            foreach (Document otherDoc in openDocs)
+            //foreach (Document otherDoc in openDocs)
+            foreach (Document otherDoc in selectedDocsList)
             {
-                // Get the name of the current doc
-                titlesOfDoc.Add(otherDoc.Title);
+                // Get the name of the current document from openDocs. This can be use to report the updated documents
+                titlesOfDocList.Add(otherDoc.Title);
 
+                // Create a new transaction in each of the other documents and copy the template
                 using (Transaction t = new Transaction(otherDoc, "Copy View Template"))
                 {
                     t.Start();
 
                     // Perform the copy into the other document using ElementTransformUtils
-                    //ElementTransformUtils.CopyElements(doc, allViewTemplates, otherDoc, Transform.Identity, cpOpts);
                     ElementTransformUtils.CopyElements(doc, viewTemplateIDsList, otherDoc, Transform.Identity, cpOpts);
 
                     t.Commit();
                 }
             }
 
-            Debug.Print($"Revit model(s) updated: {titlesOfDoc.Count()}");
-            Debug.Print($"View Templates Tatal: {allViewTemplates.Count()}");
-            Debug.Print($"View Templates copied: {viewTemplateIDsList.Count()}");
-
             string result = string.Format("Revit model(s) updated: {0}\nView Templates Total: {1}\nView Templates copied: {2}",
-                               titlesOfDoc.Count(),
+                               titlesOfDocList.Count(),
                                allViewTemplates.Count(),
                                viewTemplateIDsList.Count());
-
+            // Tell the user the results
             TaskDialog.Show("Copy Templates Result", result);
 
 
             return Result.Succeeded;
+        }
+
+        private List<Document> GetListOfSelectedDocs(List<Document> openDocs)
+        {
+            List<Document> selectedDocs = new List<Document>();
+            // Gui for list of templates to get the selected templates list
+            var ViewTemplatesList = new ObservableCollection<ViewTemplateData>(
+                openDocs.Select(vt => new ViewTemplateData(vt.Title, false)));
+
+            // Open the DocsListForm
+            var DocsListForm = new ListForm1(ViewTemplatesList)
+            {
+                Width = 600,
+                Height = 650,
+                WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
+                Topmost = true,
+            };
+            DocsListForm.lbl_Info.Content = "Select the Revit Model to be updated.";
+            DocsListForm.ShowDialog();
+
+            // Get the selected Documents where IsSelected is true
+            var formSelectedDocs = DocsListForm.selectedViewTemplates.Where(formDoc => formDoc.IsSelected);
+
+            // Collect the Selected Documents from the openDocs list
+            selectedDocs = formSelectedDocs
+                .Select(vtData => openDocs.FirstOrDefault(vt => vt.Title == vtData.TemplateName))
+                .Where(viewTemplate => viewTemplate != null)
+                .Select(viewTemplate => viewTemplate)
+                .ToList();
+
+
+
+            return selectedDocs;
         }
 
         private List<View> GetAllViewTemplates(Document doc)
@@ -183,6 +200,8 @@ namespace CopyTemplatesToOpenDocs
         }
 
     }
+
+    // Other Classes used by this command
     public class MyCopyHandler : IDuplicateTypeNamesHandler
     {
         public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
