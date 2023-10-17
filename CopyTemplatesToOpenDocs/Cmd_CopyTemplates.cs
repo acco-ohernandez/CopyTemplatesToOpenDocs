@@ -145,7 +145,7 @@ namespace CopyTemplatesToOpenDocs
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
                 Topmost = true,
             };
-            DocsListForm.lbl_Info.Content = "Select the Revit Model to be updated.";
+            DocsListForm.lbl_Info.Content = "Select the Revit Model(s) to be updated.";
             DocsListForm.ShowDialog();
 
             // Get the selected Documents where IsSelected is true
