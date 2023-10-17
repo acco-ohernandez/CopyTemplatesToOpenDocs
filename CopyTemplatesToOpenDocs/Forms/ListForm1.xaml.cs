@@ -1,5 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,44 +21,55 @@ namespace CopyTemplatesToOpenDocs.Forms
     /// </summary>
     public partial class ListForm1 : Window
     {
-        public ListForm1()
+        public ObservableCollection<ViewTemplateData> selectedViewTemplates { get; set; }
+        public ListForm1(ObservableCollection<ViewTemplateData> allViewTemplates)
         {
             InitializeComponent();
+            DataContext = this;
+            selectedViewTemplates = allViewTemplates; // Use the same collection reference
+            dataGrid.Items.Clear();
+            dataGrid.ItemsSource = selectedViewTemplates;
+
         }
 
-        private void btn_Import_Click(object sender, RoutedEventArgs e)
+        private void btn_Ok_Click(object sender, RoutedEventArgs e)
         {
+            var list = selectedViewTemplates;
             this.DialogResult = true;
             this.Close();
         }
-        //private void CheckBox_Click(object sender, RoutedEventArgs e)
+        private void btn_CheckAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in selectedViewTemplates)
+            {
+                item.IsSelected = true;
+            }
+        }
+
+        private void btn_UnCheckAll_Click(object sender, RoutedEventArgs e)
+        {
+            foreach (var item in selectedViewTemplates)
+            {
+                item.IsSelected = false;
+            }
+        }
+
+        //private void dataGrid_Selected(object sender, RoutedEventArgs e)
         //{
-        //    var checkBox = sender as CheckBox;
-        //    if (checkBox != null)
-        //    {
-        //        // Access the selected item
-        //        var selectedItem = dataGrid.SelectedItem as ViewTemplateData;
-        //        if (selectedItem != null)
-        //        {
-        //            // Update the IsSelected property
-        //            selectedItem.IsSelected = checkBox.IsChecked == true;
-        //        }
-        //    }
+
         //}
 
-    }
-
-
-    public class ViewTemplateData
-    {
-        public bool IsSelected { get; set; }
-        public string TemplateName { get; set; }
-
-        public ViewTemplateData(string templateName, bool isSelected)
+        private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            TemplateName = templateName;
-            IsSelected = isSelected;
-        }
-    }
+            if (e.AddedItems.Count > 0)
+            {
+                // Get the selected ViewTemplateData item
+                var selectedTemplate = (ViewTemplateData)e.AddedItems[0];
 
+                // Toggle the 'IsSelected' property of the selected template
+                selectedTemplate.IsSelected = !selectedTemplate.IsSelected;
+            }
+        }
+
+    }
 }

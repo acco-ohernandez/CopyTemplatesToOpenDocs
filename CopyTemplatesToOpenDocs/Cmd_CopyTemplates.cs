@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Linq;
 using System.Reflection;
@@ -21,6 +22,7 @@ namespace CopyTemplatesToOpenDocs
     [Transaction(TransactionMode.Manual)]
     public class Cmd_CopyTemplates : IExternalCommand
     {
+
         public Result Execute(ExternalCommandData commandData, ref string message, ElementSet elements)
         {
             // This is a variable for the Revit application
@@ -50,45 +52,64 @@ namespace CopyTemplatesToOpenDocs
             if (allViewTemplates == null)
                 return Result.Cancelled;
 
+
+            // Gui for list of templates to get the selected templates list
+            var ViewTemplatesList = new ObservableCollection<ViewTemplateData>(
+                allViewTemplates.Select(vt => new ViewTemplateData(vt.Name, false)));
+
             // Open schedulesImport_Form1
-            ListForm1 ViewTemplateListForm = new ListForm1()
+            ListForm1 ViewTemplateListForm = new ListForm1(ViewTemplatesList)
             {
-                Width = 500,
-                Height = 600,
+                Width = 600,
+                Height = 650,
                 WindowStartupLocation = System.Windows.WindowStartupLocation.CenterScreen,
                 Topmost = true,
             };
 
-            // Gui for list of templates
-            // CODE HERE<============================
-            // Get the selected templates list
-            // Pass the list schedules to the form data grid
-            ViewTemplateListForm.dataGrid.ItemsSource = allViewTemplates.Select(vt => vt.Name).ToList();
             ViewTemplateListForm.ShowDialog();
-            //var allViewTemplateIDs = allViewTemplates.Select(vt => vt.Id).ToList();
-            int count = 0;
-            List<ElementId> viewTemplateIDsList = ViewTemplateListForm.DialogResult == true
-                                        ? ViewTemplateListForm.dataGrid.SelectedItems.Cast<string>()
-                                            .Select(curViewTemplateName =>
-                                            {
-                                                var viewTemplate = allViewTemplates.FirstOrDefault(vt => vt.Name == curViewTemplateName);
-                                                return viewTemplate.Id;
-                                            })
-                                            .Where(id => id != null)
-                                            .ToList()
-                                        : new List<ElementId>(); // Store as a list of integers, not ElementIds
 
-            //M_MyTaskDialog("Info", $"{count} Schedule(s) Imported Successfully");
+            List<ElementId> viewTemplateIDsList = new List<ElementId>();
+            // Check if the user confirmed the selection
+            if (ViewTemplateListForm.DialogResult == true)
+            {
 
+                // Update the selectedViewTemplates collection with user selections
+                var selectedViewTemplates = new ObservableCollection<ViewTemplateData>(ViewTemplateListForm.selectedViewTemplates);
 
+                // Collect the IDs of the selected templates
+                foreach (ViewTemplateData vtData in selectedViewTemplates)
+                {
+                    Debug.Print($"TemplateName: {vtData.TemplateName}, IsSelected: {vtData.IsSelected} ======================");
+                    if (vtData.IsSelected)
+                    {
+                        var viewTemplate = allViewTemplates.FirstOrDefault(vt => vt.Name == vtData.TemplateName);
+                        if (viewTemplate != null)
+                        {
+                            viewTemplateIDsList.Add(viewTemplate.Id);
+                        }
+                    }
+                }
+
+                if (viewTemplateIDsList.Count == 0)
+                {
+                    TaskDialog.Show("Info", "No View Templates Selected \nNothing copied");
+                    return Result.Cancelled;
+                }
+
+                // Rest of your code for copying templates...
+            }
+            else
+            {
+                return Result.Cancelled;
+            }
 
             // Gui for list of documents
             // CODE HERE <============================
             // Get the selected documents list
 
-
             // Create a default CopyPasteOptions
             CopyPasteOptions cpOpts = new CopyPasteOptions();
+            cpOpts.SetDuplicateTypeNamesHandler(new MyCopyHandler());
 
             List<string> titlesOfDoc = new List<string>();
 
@@ -111,12 +132,20 @@ namespace CopyTemplatesToOpenDocs
             }
 
             Debug.Print($"Revit model(s) updated: {titlesOfDoc.Count()}");
-            Debug.Print($"View Templates copied: {allViewTemplates.Count()}");
+            Debug.Print($"View Templates Tatal: {allViewTemplates.Count()}");
+            Debug.Print($"View Templates copied: {viewTemplateIDsList.Count()}");
 
+            string result = string.Format("Revit model(s) updated: {0}\nView Templates Total: {1}\nView Templates copied: {2}",
+                               titlesOfDoc.Count(),
+                               allViewTemplates.Count(),
+                               viewTemplateIDsList.Count());
+
+            TaskDialog.Show("Copy Templates Result", result);
 
 
             return Result.Succeeded;
         }
+
         private List<View> GetAllViewTemplates(Document doc)
         {
             // Get all View Templates in the current document
@@ -152,7 +181,58 @@ namespace CopyTemplatesToOpenDocs
 
             return myButtonData1.Data;
         }
+
     }
+    public class MyCopyHandler : IDuplicateTypeNamesHandler
+    {
+        public DuplicateTypeAction OnDuplicateTypeNamesFound(DuplicateTypeNamesHandlerArgs args)
+        {
+            // You can decide how to handle duplicate types here.
+            // For example, to skip duplicates and use the existing type, you can do:
+            return DuplicateTypeAction.UseDestinationTypes;
+        }
+    }
+    public class ViewTemplateData : INotifyPropertyChanged
+    {
+        private bool isSelected;
+        public bool IsSelected
+        {
+            get { return isSelected; }
+            set
+            {
+                if (isSelected != value)
+                {
+                    isSelected = value;
+                    OnPropertyChanged(nameof(IsSelected));
+                }
+            }
+        }
 
+        private string templateName;
+        public string TemplateName
+        {
+            get { return templateName; }
+            set
+            {
+                if (templateName != value)
+                {
+                    templateName = value;
+                    OnPropertyChanged(nameof(TemplateName));
+                }
+            }
+        }
 
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        protected virtual void OnPropertyChanged(string propertyName)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public ViewTemplateData(string templateName, bool isSelected)
+        {
+            TemplateName = templateName;
+            IsSelected = isSelected;
+        }
+    }
 }
