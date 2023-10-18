@@ -5,7 +5,7 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     xmlns:local="clr-namespace:CopyTemplatesToOpenDocs.Forms"
     mc:Ignorable="d"
-    Title="ListForm1" Height="650" Width="600">
+    Title="Copy view templates to other Revit Models" Height="650" Width="600">
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="40"/>
