@@ -25,7 +25,9 @@
           GridLinesVisibility="Horizontal"
           AutoGenerateColumns="False"
           SelectionUnit="FullRow"
-          SelectionMode="Single" SelectionChanged="dataGrid_SelectionChanged"
+          SelectionMode="Extended" 
+          SelectionChanged="dataGrid_SelectionChanged"
+          PreviewMouseDown="dataGrid_PreviewMouseDown"
             >
             <DataGrid.Columns>
 

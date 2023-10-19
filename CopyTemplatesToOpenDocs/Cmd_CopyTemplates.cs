@@ -33,13 +33,8 @@ namespace CopyTemplatesToOpenDocs
 
             // Referenced similar code: https://boostyourbim.wordpress.com/2013/07/26/transferring-just-one-view-template-from-project-to-project/
 
-            // Get the path of the current document
-            string currentDocPath = doc.PathName;
-
-            // Get all other open documents, excluding the current document based on the path
-            var openDocs = uiapp.Application.Documents.Cast<Document>()
-                .Where(d => d.PathName != currentDocPath)
-                .ToList(); // ToList() ensures we have a list we can iterate through
+            // Get all the open documents except the current active one.
+            List<Document> openDocs = GetOtherOpenDocuments(doc, uiapp);
 
             if (openDocs.Count == 0)
             {
@@ -128,6 +123,14 @@ namespace CopyTemplatesToOpenDocs
 
 
             return Result.Succeeded;
+        }
+
+        private List<Document> GetOtherOpenDocuments(Document doc, UIApplication uiapp)
+        {
+            var allOtherOpenDocs = uiapp.Application.Documents.Cast<Document>()
+                .Where(d => d.ActiveView == null)
+                .ToList();
+            return allOtherOpenDocs;
         }
 
         private List<Document> GetListOfSelectedDocs(List<Document> openDocs)

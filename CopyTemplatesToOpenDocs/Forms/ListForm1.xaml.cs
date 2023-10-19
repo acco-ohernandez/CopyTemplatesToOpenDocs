@@ -61,13 +61,34 @@ namespace CopyTemplatesToOpenDocs.Forms
 
         private void dataGrid_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
-            if (e.AddedItems.Count > 0)
+            if (isShiftKeyDown)
+            {
+                foreach (var item in e.AddedItems)
+                {
+                    var selectedTemplate = (ViewTemplateData)item;
+                    selectedTemplate.IsSelected = true;
+                }
+            }
+            else if (e.AddedItems.Count > 0)
             {
                 // Get the selected ViewTemplateData item
                 var selectedTemplate = (ViewTemplateData)e.AddedItems[0];
 
                 // Toggle the 'IsSelected' property of the selected template
                 selectedTemplate.IsSelected = !selectedTemplate.IsSelected;
+            }
+        }
+
+        private bool isShiftKeyDown = false;
+        private void dataGrid_PreviewMouseDown(object sender, MouseButtonEventArgs e)
+        {
+            if (Keyboard.IsKeyDown(Key.LeftShift) || Keyboard.IsKeyDown(Key.RightShift))
+            {
+                isShiftKeyDown = true;
+            }
+            else
+            {
+                isShiftKeyDown = false;
             }
         }
 
