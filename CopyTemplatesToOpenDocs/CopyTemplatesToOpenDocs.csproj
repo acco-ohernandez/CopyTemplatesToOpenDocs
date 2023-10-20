@@ -164,13 +164,10 @@
   <ItemGroup>
     <Compile Include="App.cs" />
     <Compile Include="Cmd_CopyTemplates.cs" />
-    <Compile Include="Cmd_ReloadAddIn.cs" />
     <Compile Include="Forms\ListForm1.xaml.cs">
       <DependentUpon>ListForm1.xaml</DependentUpon>
     </Compile>
     <Compile Include="Utils\ButtonDataClass.cs" />
-    <Compile Include="Command2.cs" />
-    <Compile Include="Cmd_CopyTemplates_1BackUP.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
